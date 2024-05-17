@@ -1,0 +1,57 @@
+generator user {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  SANDWICH
+  DRINK
+  SIDE_DISH
+  DESSERT
+}
+
+model Combo {
+  id          String    @id @default(uuid())
+  name        String
+  description String
+  price       Decimal
+  created_at  DateTime  @default(now())
+  updated_at  DateTime? @updatedAt
+
+  comboProducts ComboProduct[]
+
+  @@map("combos")
+}
+
+model ComboProduct {
+  id         String    @id @default(uuid())
+  combo_id   String
+  product_id String
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+
+  combo   Combo   @relation(fields: [combo_id], references: [id])
+  product Product @relation(fields: [product_id], references: [id])
+
+  @@map("combo_products")
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  description String
+  price       Decimal
+  active      Boolean   @default(true)
+  category    Category
+  created_at  DateTime  @default(now())
+  updated_at  DateTime? @updatedAt
+
+  comboProducts ComboProduct[]
+
+  @@map("products")
+}

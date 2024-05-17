@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "[OPEN PROJECT] Git User Config",
+      "type": "shell",
+      "command": "git config user.email \"samirelhassann@gmail.com\" && git config user.name \"Samir El Hassan\"",
+      "group": "none",
+      "presentation": {
+        "close": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    }
+  ]
+}

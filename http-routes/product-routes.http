@@ -1,0 +1,46 @@
+
+@host = http://localhost:3002
+@tokenAdmin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiQURNSU4iLCJzdWIiOiIzNGUzYWRiYS0yMzQ1LTQyYjAtYWI5My0wMjY2ZTBlNGUxNjUiLCJpYXQiOjE3MTU5MDUwMTMsImV4cCI6MTcxNTk5MTQxM30.ZrUwF6Unir6Ic4PkKHrVMsL3pP3aksmjbjFayHZYXLI
+
+
+# @name get-products
+GET {{host}}/products
+
+### 
+
+# @name get-product-by-id
+GET {{host}}/products/0c3c1658-c9e5-42a0-b87b-3d9a7dfe07ac
+
+### 
+
+# @name create-product
+POST {{host}}/products
+content-type: application/json
+Authorization: Bearer {{tokenAdmin}}
+
+{
+  "name": "Batata Rustica",
+  "description": "Batata Rustica",
+  "price": 0.2,
+  "category": "SIDE_DISH"
+}
+
+### 
+
+# @name edit-product
+PUT {{host}}/products/0b612db0-d081-4df4-a564-28ac04cd1cfe
+content-type: application/json
+
+{
+  "name": "hamburguer de costela 2",
+  "price": 20,
+  "description": "hamburguer de costela",
+  "category": "DESSERT"
+}
+
+### 
+
+# @name inactive-product
+DELETE {{host}}/products/0b612db0-d081-4df4-a564-28ac04cd1cfe
+content-type: application/json
+

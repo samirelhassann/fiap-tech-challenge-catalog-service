@@ -1,0 +1,32 @@
+@host = http://localhost:3002
+@service-prefix = catalog-service
+# @host = http://localhost:31100
+
+# @name get-combos
+GET {{host}}/{{service-prefix}}/combos
+
+###
+
+# @name get-combo-by-id
+GET {{host}}/{{service-prefix}}/combos/e6baed6a-e929-4389-aecc-cd55354b27c5
+
+###
+
+# @name create-combo
+POST {{host}}/{{service-prefix}}/combos
+content-type: application/json
+
+{
+  "name": "Combo 1",
+  "description": "Combo 1 description",
+  "sandwichId": "1",
+  "drinkId": "9",
+  "sideId": "7"
+}
+
+  # name: z.string().optional(),
+  # description: z.string().optional(),
+  # sandwichId: z.string().optional(),
+  # drinkId: z.string().optional(),
+  # sideId: z.string().optional(),
+  # dessertId: z.string().optional(),
