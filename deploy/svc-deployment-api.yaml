@@ -11,4 +11,4 @@ spec:
   ports:
     - port: 80
       protocol: TCP
-      targetPort: 3333
+      targetPort: 3002
