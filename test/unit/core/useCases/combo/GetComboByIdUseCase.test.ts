@@ -1,53 +1,66 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it, beforeEach, vi, expect } from "vitest";
 
 import { UniqueEntityId } from "@/core/domain/base/entities/UniqueEntityId";
 import { ResourceNotFoundError } from "@/core/domain/base/errors/useCases/ResourceNotFoundError";
+import { IComboRepository } from "@/core/interfaces/repositories/IComboRepository";
+import { IProductRepository } from "@/core/interfaces/repositories/IProductRepository";
 import { ComboUseCase } from "@/core/useCases/combo/ComboUseCase";
+import { GetComboByIdUseCaseRequestDTO } from "@/core/useCases/combo/dto/GetComboByIdUseCaseDTO";
+import { IComboUseCase } from "@/core/useCases/combo/IComboUseCase";
+import { faker } from "@faker-js/faker";
 import { makeCombo } from "@test/unit/adapters/factories/MakeCombo";
-import { InMemoryComboProductRepository } from "@test/unit/adapters/InMemoryComboProductRepository";
-import { InMemoryComboRepository } from "@test/unit/adapters/InMemoryComboRepository";
-import { InMemoryProductRepository } from "@test/unit/adapters/InMemoryProductRepository";
+import { makeProduct } from "@test/unit/adapters/factories/MakeProduct";
 
-let inMemoryComboRepository: InMemoryComboRepository;
-let inMemoryComboProductRepository: InMemoryComboProductRepository;
-let inMemoryProductRepository: InMemoryProductRepository;
-let sut: ComboUseCase;
+let comboRepository: IComboRepository;
+let productRepository: IProductRepository;
+let sut: IComboUseCase;
 
-describe("Given the Get Combo By Id Use Case", () => {
-  const id = "123";
-
+describe("GetUsersUseCase", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    comboRepository = {
+      findById: vi.fn(),
+    } as unknown as IComboRepository;
 
-    inMemoryComboProductRepository = new InMemoryComboProductRepository();
-    inMemoryComboRepository = new InMemoryComboRepository(
-      inMemoryComboProductRepository
-    );
-    inMemoryProductRepository = new InMemoryProductRepository();
+    productRepository = {
+      findManyByIds: vi.fn(),
+    } as unknown as IProductRepository;
 
-    sut = new ComboUseCase(inMemoryComboRepository, inMemoryProductRepository);
+    sut = new ComboUseCase(comboRepository, productRepository);
   });
 
   it("should return the combo correctly", async () => {
-    const combo = makeCombo({}, new UniqueEntityId(id));
+    const comboId = faker.string.uuid();
 
-    inMemoryComboRepository.items.push(combo);
+    const request: GetComboByIdUseCaseRequestDTO = {
+      id: comboId,
+    };
 
-    const { combo: foundedCombo } = await sut.getComboById({ id });
+    const combo = makeCombo({}, new UniqueEntityId(comboId));
+    const productDetails = [makeProduct(), makeProduct()];
 
-    expect(foundedCombo).toEqual(
-      expect.objectContaining({
-        id: new UniqueEntityId(id),
-      })
+    vi.mocked(comboRepository.findById).mockResolvedValueOnce(combo);
+    vi.mocked(productRepository.findManyByIds).mockResolvedValueOnce(
+      productDetails
     );
+
+    const response = await sut.getComboById(request);
+
+    expect(response).toEqual({
+      combo,
+      productDetails,
+    });
   });
 
   it("should throw an error when the informed id does not exist", async () => {
-    const combo = makeCombo({}, new UniqueEntityId(id));
+    const comboId = faker.string.uuid();
 
-    inMemoryComboRepository.items.push(combo);
+    const request: GetComboByIdUseCaseRequestDTO = {
+      id: comboId,
+    };
 
-    await expect(() => sut.getComboById({ id: "456" })).rejects.toBeInstanceOf(
+    vi.mocked(comboRepository.findById).mockResolvedValueOnce(null);
+
+    await expect(sut.getComboById(request)).rejects.toThrow(
       ResourceNotFoundError
     );
   });

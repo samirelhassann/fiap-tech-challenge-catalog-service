@@ -29,7 +29,7 @@ describe("CreateComboPresenter", () => {
     name: faker.commerce.productName(),
     description: faker.commerce.productDescription(),
     price: parseFloat(faker.commerce.price()),
-    productIds: [faker.datatype.uuid(), faker.datatype.uuid()],
+    productIds: [faker.string.uuid(), faker.string.uuid()],
   });
 
   beforeEach(() => {

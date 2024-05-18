@@ -1,58 +1,75 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it, beforeEach, vi, expect } from "vitest";
 
 import { PaginationParams } from "@/core/domain/base/PaginationParams";
+import { PaginationResponse } from "@/core/domain/base/PaginationResponse";
+import { Combo } from "@/core/domain/entities/Combo";
+import { IComboRepository } from "@/core/interfaces/repositories/IComboRepository";
+import { IProductRepository } from "@/core/interfaces/repositories/IProductRepository";
 import { ComboUseCase } from "@/core/useCases/combo/ComboUseCase";
+import { GetCombosUseCaseRequestDTO } from "@/core/useCases/combo/dto/GetCombosUseCaseDTO";
+import { IComboUseCase } from "@/core/useCases/combo/IComboUseCase";
 import { makeCombo } from "@test/unit/adapters/factories/MakeCombo";
-import { InMemoryComboProductRepository } from "@test/unit/adapters/InMemoryComboProductRepository";
-import { InMemoryComboRepository } from "@test/unit/adapters/InMemoryComboRepository";
-import { InMemoryProductRepository } from "@test/unit/adapters/InMemoryProductRepository";
 
-let inMemoryComboRepository: InMemoryComboRepository;
-let inMemoryComboProductRepository: InMemoryComboProductRepository;
-let inMemoryProductRepository: InMemoryProductRepository;
-let sut: ComboUseCase;
+let comboRepository: IComboRepository;
+let productRepository: IProductRepository;
+let sut: IComboUseCase;
 
-describe("Given the Get Combos Use Case", () => {
-  const page = 1;
-  const size = 10;
-
+describe("GetCombosUseCase", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    comboRepository = {
+      findMany: vi.fn(),
+    } as unknown as IComboRepository;
 
-    inMemoryComboProductRepository = new InMemoryComboProductRepository();
-    inMemoryComboRepository = new InMemoryComboRepository(
-      inMemoryComboProductRepository
-    );
-    inMemoryProductRepository = new InMemoryProductRepository();
+    productRepository = {} as unknown as IProductRepository;
 
-    sut = new ComboUseCase(inMemoryComboRepository, inMemoryProductRepository);
+    sut = new ComboUseCase(comboRepository, productRepository);
   });
 
   it("should return the combos correctly", async () => {
-    const params = new PaginationParams(page, size);
+    const request: GetCombosUseCaseRequestDTO = {
+      params: new PaginationParams(1, 10),
+    };
 
-    const comboToCreate = makeCombo();
+    const combos = [makeCombo(), makeCombo()];
 
-    inMemoryComboRepository.items.push(comboToCreate);
+    const paginationResponse = new PaginationResponse<Combo>({
+      data: combos,
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 2,
+      pageSize: request.params.size,
+    });
 
-    const { paginationResponse } = await sut.getCombos({ params });
+    vi.mocked(comboRepository.findMany).mockResolvedValueOnce(
+      paginationResponse
+    );
 
-    const combos = paginationResponse.data;
+    const response = await sut.getCombos(request);
 
-    expect(combos).toHaveLength(1);
+    expect(response).toEqual({ paginationResponse });
   });
 
   it("should return the combos from the second pagination correctly", async () => {
-    const params = new PaginationParams(2, size);
+    const request: GetCombosUseCaseRequestDTO = {
+      params: new PaginationParams(2, 10),
+    };
 
-    Array.from({ length: 12 }).forEach(() => {
-      inMemoryComboRepository.items.push(makeCombo());
+    const combos = [makeCombo(), makeCombo()];
+
+    const paginationResponse = new PaginationResponse<Combo>({
+      data: combos,
+      currentPage: 2,
+      totalPages: 1,
+      totalItems: 2,
+      pageSize: request.params.size,
     });
 
-    const { paginationResponse } = await sut.getCombos({ params });
+    vi.mocked(comboRepository.findMany).mockResolvedValueOnce(
+      paginationResponse
+    );
 
-    const combos = paginationResponse.data;
+    const response = await sut.getCombos(request);
 
-    expect(combos).toHaveLength(2);
+    expect(response).toEqual({ paginationResponse });
   });
 });

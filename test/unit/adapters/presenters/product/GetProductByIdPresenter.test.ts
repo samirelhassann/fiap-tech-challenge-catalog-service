@@ -22,7 +22,7 @@ let presenter: GetProductByIdPresenter;
 
 describe("GetProductByIdPresenter", () => {
   const paramsMock = getProductByIdQueryParamsSchema.parse({
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
   });
 
   beforeEach(() => {

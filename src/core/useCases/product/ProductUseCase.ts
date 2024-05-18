@@ -1,9 +1,3 @@
-import { UnsupportedArgumentValueError } from "@/core/domain/base/errors/entities/UnsupportedArgumentValueError";
-import { AttributeConflictError } from "@/core/domain/base/errors/useCases/AttributeConflictError";
-import { ResourceNotFoundError } from "@/core/domain/base/errors/useCases/ResourceNotFoundError";
-import { Product } from "@/core/domain/entities/Product";
-import { CategoriesEnum } from "@/core/domain/enums/CategoriesEnum";
-import { Category } from "@/core/domain/valueObjects/Category";
 import { IProductRepository } from "@/core/interfaces/repositories/IProductRepository";
 
 import {
@@ -26,134 +20,61 @@ import {
   InactiveProductUseCaseRequestDTO,
   InactiveProductUseCaseResponseDTO,
 } from "./dto/InactiveProductUseCaseDTO";
+import { CreateProductUseCase } from "./implementations/CreateProductUseCase";
+import { EditProductUseCase } from "./implementations/EditProductUseCase";
+import { GetProductByIdUseCase } from "./implementations/GetProductByIdUseCase";
+import { GetProductsUseCase } from "./implementations/GetProductsUseCase";
+import { InactivateProductUseCase } from "./implementations/InactivateProductUseCase";
 import { IProductUseCase } from "./IProductUseCase";
 
 export class ProductUseCase implements IProductUseCase {
-  constructor(private productRepository: IProductRepository) {}
+  private getProductsUseCase: GetProductsUseCase;
 
-  async getProducts({
-    params,
-    includeInactive,
-    category,
-  }: GetProductsUseCaseRequestDTO): Promise<GetProductsUseCaseResponseDTO> {
-    if (
-      category &&
-      !Object.keys(CategoriesEnum)
-        .map((e) => e.toLowerCase())
-        .includes(category.toLowerCase())
-    ) {
-      throw new UnsupportedArgumentValueError(Category.name);
-    }
+  private getProductByIdUseCase: GetProductByIdUseCase;
 
-    const productCategory = category
-      ? new Category({ name: category as CategoriesEnum })
-      : undefined;
+  private createProductUseCase: CreateProductUseCase;
 
-    const paginationResponse = await this.productRepository.findMany(
-      params,
-      includeInactive,
-      productCategory
+  private editProductUseCase: EditProductUseCase;
+
+  private inactivateProductUseCase: InactivateProductUseCase;
+
+  constructor(private productRepository: IProductRepository) {
+    this.getProductsUseCase = new GetProductsUseCase(productRepository);
+    this.getProductByIdUseCase = new GetProductByIdUseCase(productRepository);
+    this.createProductUseCase = new CreateProductUseCase(productRepository);
+    this.editProductUseCase = new EditProductUseCase(productRepository);
+    this.inactivateProductUseCase = new InactivateProductUseCase(
+      productRepository
     );
-
-    return { paginationResponse };
   }
 
-  async getProductById({
-    id,
-  }: GetProductByIdUseCaseRequestDTO): Promise<GetProductByIdUseCaseResponseDTO> {
-    const product = await this.productRepository.findById(id);
-
-    if (!product) {
-      throw new ResourceNotFoundError("product");
-    }
-
-    return { product };
+  async getProducts(
+    props: GetProductsUseCaseRequestDTO
+  ): Promise<GetProductsUseCaseResponseDTO> {
+    return this.getProductsUseCase.execute(props);
   }
 
-  async createProduct({
-    category,
-    description,
-    name,
-    price,
-  }: CreateProductUseCaseRequestDTO): Promise<CreateProductUseCaseResponseDTO> {
-    const hasProductWithSameName =
-      await this.productRepository.findByName(name);
-
-    if (hasProductWithSameName) {
-      throw new AttributeConflictError<Product>("name", Product.name);
-    }
-
-    const product = await this.productRepository.create(
-      new Product({
-        name,
-        price,
-        category: new Category({ name: category as CategoriesEnum }),
-        description,
-      })
-    );
-
-    return { product };
+  async getProductById(
+    props: GetProductByIdUseCaseRequestDTO
+  ): Promise<GetProductByIdUseCaseResponseDTO> {
+    return this.getProductByIdUseCase.execute(props);
   }
 
-  async editProduct({
-    id,
-    name,
-    category,
-    description,
-    price,
-  }: EditProductUseCaseRequestDTO): Promise<EditProductUseCaseResponseDTO> {
-    const product = await this.productRepository.findById(id);
+  async createProduct(
+    props: CreateProductUseCaseRequestDTO
+  ): Promise<CreateProductUseCaseResponseDTO> {
+    return this.createProductUseCase.execute(props);
+  }
 
-    if (!product) {
-      throw new ResourceNotFoundError("product");
-    }
-
-    if (name) {
-      const hasProductWithSameName =
-        await this.productRepository.findByName(name);
-
-      if (
-        hasProductWithSameName &&
-        hasProductWithSameName.id.toString() !== product.id.toString()
-      ) {
-        throw new AttributeConflictError("name", "product");
-      }
-
-      product.name = name;
-    }
-
-    if (description) {
-      product.description = description;
-    }
-
-    if (category) {
-      product.category = new Category({ name: category as CategoriesEnum });
-    }
-
-    if (price) {
-      product.price = price;
-    }
-
-    const updatedProduct = await this.productRepository.update(product);
-
-    return { product: updatedProduct };
+  async editProduct(
+    props: EditProductUseCaseRequestDTO
+  ): Promise<EditProductUseCaseResponseDTO> {
+    return this.editProductUseCase.execute(props);
   }
 
   async inactiveProduct(
     props: InactiveProductUseCaseRequestDTO
   ): Promise<InactiveProductUseCaseResponseDTO> {
-    const { id } = props;
-
-    const product = await this.productRepository.findById(id);
-
-    if (!product) {
-      throw new ResourceNotFoundError(Product.name);
-    }
-
-    product.active = false;
-
-    const updatedProduct = await this.productRepository.update(product);
-
-    return { product: updatedProduct };
+    return this.inactivateProductUseCase.execute(props);
   }
 }
