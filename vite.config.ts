@@ -6,6 +6,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
+    reporters: [
+      "verbose",
+      [
+        "vitest-sonar-reporter",
+        { outputFile: "coverage/reports/sonar-reporter.xml" },
+      ],
+    ],
     environmentMatchGlobs: [["test/bdd/**", "prisma"]],
     include: ["**/*.{test,spec}.?(c|m)[jt]s?(x)"],
     exclude: [
@@ -19,7 +26,7 @@ export default defineConfig({
     coverage: {
       provider: "istanbul",
       reportsDirectory: "./coverage",
-      reporter: ["text", "lcov"],
+      reporter: ["cobertura", "html", "lcov", "text-summary", "text"],
       include: ["src/**/*"],
       exclude: ["**/config/**", "**/schemas/**", "**/schema/**","**/errors/**", "**/core/domain/**", "**/drivers/**","**/repositories/PrismaRepositoryFactory.ts"],
       all: true,
