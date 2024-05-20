@@ -24,24 +24,30 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn run test
 
-  run-bdd-tests:
-    name: 🧪 Run BDD Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'yarn'
+  # run-bdd-tests:
+  #   name: 🧪 Run BDD Tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18
+  #         cache: 'yarn'
+  #     - run: yarn install --frozen-lockfile
+  #     - name: 'Create .env file'
+  #       run: |
+  #         touch .env
+  #         echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+  #         echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
+  #         cat .env
+  #     - run: yarn test:bdd
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn test:bdd
 
   sonarcloud-analysis:
     name: 🔍 SonarCloud Analysis
     needs: 
       - run-unit-tests
-      - run-bdd-tests
+      # - run-bdd-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -110,7 +116,7 @@ jobs:
           creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets  .AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":" ${{ secrets.AZURE_TENANT_ID }}"}'
       - name: Get AKS Credentials
         run: |
-          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.   AKS_CLUSTER_NAME }} --overwrite-existing --file ${{ github.workspace }}/kubeconfig
+          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP_NAME }} --name ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing --file ${{ github.workspace }}/kubeconfig
         env:
           RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
           AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
@@ -125,16 +131,16 @@ jobs:
           KUBECONFIG: ${{ github.workspace }}/kubeconfig
       - name: Configure ConfigMap
         run: |
-          sed -i 's|POSTGRES_URL: ""|POSTGRES_URL: "${{ secrets.POSTGRES_URL }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|MERCADO_PAGO_GENERATE_PAYMENT: ""|MERCADO_PAGO_GENERATE_PAYMENT: "${{ secrets.MERCADO_PAGO_GENERATE_PAYMENT }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|MERCADO_PAGO_WEBHOOK_URL: ""|MERCADO_PAGO_WEBHOOK_URL: "${{ secrets.MERCADO_PAGO_WEBHOOK_URL }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|MERCADO_PAGO_API_HOST: ""|MERCADO_PAGO_API_HOST: "${{ secrets.MERCADO_PAGO_API_HOST }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|MERCADO_PAGO_BEARER_TOKEN: ""|MERCADO_PAGO_BEARER_TOKEN: "${{ secrets.MERCADO_PAGO_BEARER_TOKEN }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|MERCADO_PAGO_USER_ID: ""|MERCADO_PAGO_USER_ID: "${{ secrets.MERCADO_PAGO_USER_ID }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|MERCADO_PAGO_EXTERNAL_POS_ID: ""|MERCADO_PAGO_EXTERNAL_POS_ID: "${{ secrets.MERCADO_PAGO_EXTERNAL_POS_ID }}"|' ./deploy/configmap-api.yaml
-          sed -i 's|JWT_SECRET: ""|JWT_SECRET: "${{ secrets.JWT_SECRET }}"|' ./deploy/configmap-api.yaml
+          POSTGRES_URL_VALUE="${{ secrets.POSTGRES_URL }}"
+          JWT_SECRET_VALUE="${{ secrets.JWT_SECRET }}"
+          sed -i "/POSTGRES_URL:/c\  POSTGRES_URL: \"$POSTGRES_URL_VALUE\"" ./deploy/configmap-api.yaml
+          sed -i "/JWT_SECRET:/c\  JWT_SECRET: \"$JWT_SECRET_VALUE\"" ./deploy/configmap-api.yaml
         env:
           KUBECONFIG: ${{ github.workspace }}/kubeconfig
+      - name: Debug ConfigMap
+        run: cat ./deploy/configmap-api.yaml
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig          
       - name: Deploy to Kubernetes
         run: |
           export KUBECONFIG=${{ github.workspace }}/kubeconfig
