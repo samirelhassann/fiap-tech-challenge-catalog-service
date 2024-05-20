@@ -14,7 +14,7 @@ COPY . .
 
 RUN yarn prisma generate
 
-EXPOSE 3001
+EXPOSE 3002
 
 CMD yarn prisma migrate dev && yarn dev
 

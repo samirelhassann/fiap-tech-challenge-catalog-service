@@ -4,6 +4,7 @@ metadata:
   name: deployment-api
   labels:
     app: deployment-api
+  namespace: catalog-service
 spec:
   replicas: 1
   selector:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
       - name: deployment-api
-        image: fiaptechchallenge03acr.azurecr.io/tech-challenge-03
+        image: fiaptechchallenge04acr.azurecr.io/tech-challenge-04-catalog-image
         imagePullPolicy: Always
         resources:
           limits:

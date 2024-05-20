@@ -4,7 +4,7 @@ services:
   catalog-db:
     image: bitnami/postgresql
     volumes:
-      - db_data:/bitnami/postgresql
+      - catalog-db-data:/bitnami/postgresql
     ports:
       - 5002:5432
     environment:
@@ -13,4 +13,4 @@ services:
       - POSTGRESQL_DATABASE=catalog-db
 
 volumes:
-  db_data:
+  catalog-db-data:
