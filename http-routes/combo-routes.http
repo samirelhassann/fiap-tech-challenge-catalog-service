@@ -1,7 +1,5 @@
-# @host = http://localhost:3002
-@host = http://51.8.197.1/
+@host = http://localhost:3002
 @service-prefix = catalog-service
-# @host = http://localhost:31100
 
 # @name get-combos
 GET {{host}}/{{service-prefix}}/combos
